@@ -169,6 +169,11 @@ if ($stmt1->affected_rows > 0 && $stmt2->affected_rows > 0 && $stmt3->affected_r
     $stmt7->affected_rows > 0 && $stmt8->affected_rows > 0 && $stmt9->affected_rows > 0) {
 
     echo "Registration complete and data inserted successfully.";
+
+     // Clear session data
+     session_unset(); // Unset all session variables
+     session_destroy(); // Destroy the session
+ 
     header('Location: login.php');
     exit(); // Ensure the script stops after redirect
 
