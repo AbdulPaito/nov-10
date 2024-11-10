@@ -27,68 +27,79 @@ $upload_dir = 'Upload-image/';
 $profile_image = '';
 $imageUpload = '';
 
-// Handle profile image upload
+if (isset($_SESSION['profile_image'])) {
+    $profile_image = $_SESSION['profile_image'];
+}
+
 if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == 0) {
     $profile_image = $upload_dir . basename($_FILES['profile_image']['name']);
     if (!move_uploaded_file($_FILES['profile_image']['tmp_name'], $profile_image)) {
-        echo "Error uploading profile image.";
+        echo "Error uploading image.";
         exit;
     }
 }
 
-// Handle additional image upload
+if (isset($_SESSION['imageUpload'])) {
+    $imageUpload = $_SESSION['imageUpload'];
+}
+
 if (isset($_FILES['imageUpload']) && $_FILES['imageUpload']['error'] == 0) {
     $imageUpload = $upload_dir . basename($_FILES['imageUpload']['name']);
     if (!move_uploaded_file($_FILES['imageUpload']['tmp_name'], $imageUpload)) {
-        echo "Error uploading additional image.";
+        echo "Error uploading image.";
         exit;
     }
 }
 
-// Collect session data (no need for real_escape_string() for arrays)
-$uli_number = isset($_SESSION['uli_number']) ? $_SESSION['uli_number'] : '';
-$entry_date = isset($_SESSION['entry_date']) ? $_SESSION['entry_date'] : '';
-$last_name = isset($_SESSION['last_name']) ? $_SESSION['last_name'] : '';
-$first_name = isset($_SESSION['first_name']) ? $_SESSION['first_name'] : '';
-$middle_name = isset($_SESSION['middle_name']) ? $_SESSION['middle_name'] : '';
-$address_number_street = isset($_SESSION['address_number_street']) ? $_SESSION['address_number_street'] : '';
-$address_barangay = isset($_SESSION['address_barangay']) ? $_SESSION['address_barangay'] : '';
-$address_district = isset($_SESSION['address_district']) ? $_SESSION['address_district'] : '';
-$address_city_municipality = isset($_SESSION['address_city_municipality']) ? $_SESSION['address_city_municipality'] : '';
-$address_province = isset($_SESSION['address_province']) ? $_SESSION['address_province'] : '';
-$address_region = isset($_SESSION['address_region']) ? $_SESSION['address_region'] : '';
-$email_facebook = isset($_SESSION['email_facebook']) ? $_SESSION['email_facebook'] : '';
-$contact_no = isset($_SESSION['contact_no']) ? $_SESSION['contact_no'] : '';
-$nationality = isset($_SESSION['nationality']) ? $_SESSION['nationality'] : '';
-$sex = isset($_SESSION['sex']) ? $_SESSION['sex'] : '';
-$civil_status = isset($_SESSION['civil_status']) ? $_SESSION['civil_status'] : '';
-$employment_status = isset($_SESSION['employment_status']) ? $_SESSION['employment_status'] : '';
-$month_of_birth = isset($_SESSION['month_of_birth']) ? $_SESSION['month_of_birth'] : '';
-$day_of_birth = isset($_SESSION['day_of_birth']) ? $_SESSION['day_of_birth'] : '';
-$year_of_birth = isset($_SESSION['year_of_birth']) ? $_SESSION['year_of_birth'] : '';
-$age = isset($_SESSION['age']) ? $_SESSION['age'] : '';
-$birthplace_city_municipality = isset($_SESSION['birthplace_city_municipality']) ? $_SESSION['birthplace_city_municipality'] : '';
-$birthplace_province = isset($_SESSION['birthplace_province']) ? $_SESSION['birthplace_province'] : '';
-$birthplace_region = isset($_SESSION['birthplace_region']) ? $_SESSION['birthplace_region'] : '';
-$educational_attainment = isset($_SESSION['educational_attainment']) ? $_SESSION['educational_attainment'] : '';
-$parent_guardian_name = isset($_SESSION['parent_guardian_name']) ? $_SESSION['parent_guardian_name'] : '';
-$parent_guardian_address = isset($_SESSION['parent_guardian_address']) ? $_SESSION['parent_guardian_address'] : '';
-$classification = isset($_SESSION['classification']) ? $_SESSION['classification'] : '';
-$disability = isset($_SESSION['disability']) ? $_SESSION['disability'] : '';
-$cause_of_disability = isset($_SESSION['cause_of_disability']) ? $_SESSION['cause_of_disability'] : '';
-$taken_ncae = isset($_SESSION['taken_ncae']) ? $_SESSION['taken_ncae'] : '';
-$where = isset($_SESSION['where']) ? $_SESSION['where'] : '';
-$when = isset($_SESSION['when']) ? $_SESSION['when'] : '';
-$qualification = isset($_SESSION['qualification']) ? $_SESSION['qualification'] : '';
-$scholarship = isset($_SESSION['scholarship']) ? $_SESSION['scholarship'] : '';
-$privacy_disclaimer = isset($_SESSION['privacy_disclaimer']) ? $_SESSION['privacy_disclaimer'] : '';
-$applicant_signature = isset($_POST['applicant_signature']) ? $_POST['applicant_signature'] : '';
-$date_accomplished = isset($_POST['date_accomplished']) ? $_POST['date_accomplished'] : '';
-$registrar_signature = isset($_POST['registrar_signature']) ? $_POST['registrar_signature'] : '';
-$date_received = isset($_POST['date_received']) ? $_POST['date_received'] : '';
 
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);  
+// Collect session data from previous pages
+$uli_number = isset($_SESSION['uli_number']) ? $conn->real_escape_string($_SESSION['uli_number']) : '';
+$entry_date = isset($_SESSION['entry_date']) ? $conn->real_escape_string($_SESSION['entry_date']) : '';
+$last_name = isset($_SESSION['last_name']) ? $conn->real_escape_string($_SESSION['last_name']) : '';
+$first_name = isset($_SESSION['first_name']) ? $conn->real_escape_string($_SESSION['first_name']) : '';
+$middle_name = isset($_SESSION['middle_name']) ? $conn->real_escape_string($_SESSION['middle_name']) : '';
+$address_number_street = isset($_SESSION['address_number_street']) ? $conn->real_escape_string($_SESSION['address_number_street']) : '';
+$address_barangay = isset($_SESSION['address_barangay']) ? $conn->real_escape_string($_SESSION['address_barangay']) : '';
+$address_district = isset($_SESSION['address_district']) ? $conn->real_escape_string($_SESSION['address_district']) : '';
+$address_city_municipality = isset($_SESSION['address_city_municipality']) ? $conn->real_escape_string($_SESSION['address_city_municipality']) : '';
+$address_province = isset($_SESSION['address_province']) ? $conn->real_escape_string($_SESSION['address_province']) : '';
+$address_region = isset($_SESSION['address_region']) ? $conn->real_escape_string($_SESSION['address_region']) : '';
+$email_facebook = isset($_SESSION['email_facebook']) ? $conn->real_escape_string($_SESSION['email_facebook']) : '';
+$contact_no = isset($_SESSION['contact_no']) ? $conn->real_escape_string($_SESSION['contact_no']) : '';
+$nationality = isset($_SESSION['nationality']) ? $conn->real_escape_string($_SESSION['nationality']) : '';
+
+// Use implode only if the variable is an array
+$sex = isset($_SESSION['sex']) ? (is_array($_SESSION['sex']) ? implode(', ', $_SESSION['sex']) : $_SESSION['sex']) : '';
+$civil_status = isset($_SESSION['civil_status']) ? (is_array($_SESSION['civil_status']) ? implode(', ', $_SESSION['civil_status']) : $_SESSION['civil_status']) : '';
+$employment_status = isset($_SESSION['employment_status']) ? $conn->real_escape_string($_SESSION['employment_status']) : '';
+$month_of_birth = isset($_SESSION['month_of_birth']) ? $conn->real_escape_string($_SESSION['month_of_birth']) : '';
+$day_of_birth = isset($_SESSION['day_of_birth']) ? $conn->real_escape_string($_SESSION['day_of_birth']) : '';
+$year_of_birth = isset($_SESSION['year_of_birth']) ? $conn->real_escape_string($_SESSION['year_of_birth']) : '';
+$age = isset($_SESSION['age']) ? $conn->real_escape_string($_SESSION['age']) : '';
+$birthplace_city_municipality = isset($_SESSION['birthplace_city_municipality']) ? $conn->real_escape_string($_SESSION['birthplace_city_municipality']) : '';
+$birthplace_province = isset($_SESSION['birthplace_province']) ? $conn->real_escape_string($_SESSION['birthplace_province']) : '';
+$birthplace_region = isset($_SESSION['birthplace_region']) ? $conn->real_escape_string($_SESSION['birthplace_region']) : '';
+$educational_attainment = isset($_SESSION['educational_attainment']) ? (is_array($_SESSION['educational_attainment']) ? implode(', ', $_SESSION['educational_attainment']) : $_SESSION['educational_attainment']) : '';
+$parent_guardian_name = isset($_SESSION['parent_guardian_name']) ? $conn->real_escape_string($_SESSION['parent_guardian_name']) : '';
+$parent_guardian_address = isset($_SESSION['parent_guardian_address']) ? $conn->real_escape_string($_SESSION['parent_guardian_address']) : '';
+$classification = isset($_SESSION['classification']) ? (is_array($_SESSION['classification']) ? implode(', ', $_SESSION['classification']) : $_SESSION['classification']) : '';
+$disability = isset($_SESSION['disability']) ? (is_array($_SESSION['disability']) ? implode(', ', $_SESSION['disability']) : $_SESSION['disability']) : '';
+$cause_of_disability = isset($_SESSION['cause_of_disability']) ? (is_array($_SESSION['cause_of_disability']) ? implode(', ', $_SESSION['cause_of_disability']) : $_SESSION['cause_of_disability']) : '';
+$taken_ncae = isset($_SESSION['taken_ncae']) ? $conn->real_escape_string($_SESSION['taken_ncae']) : '';
+$where = isset($_SESSION['where']) ? $conn->real_escape_string($_SESSION['where']) : '';
+$when = isset($_SESSION['when']) ? $conn->real_escape_string($_SESSION['when']) : '';
+$qualification = isset($_SESSION['qualification']) ? $conn->real_escape_string($_SESSION['qualification']) : '';
+$scholarship = isset($_SESSION['scholarship']) ? $conn->real_escape_string($_SESSION['scholarship']) : '';
+$privacy_disclaimer = isset($_SESSION['privacy_disclaimer']) ? $conn->real_escape_string($_SESSION['privacy_disclaimer']) : '';
+$applicant_signature = isset($_POST['applicant_signature']) ? $conn->real_escape_string($_POST['applicant_signature']) : '';
+$date_accomplished = isset($_POST['date_accomplished']) ? $conn->real_escape_string($_POST['date_accomplished']) : '';
+$registrar_signature = isset($_POST['registrar_signature']) ? $conn->real_escape_string($_POST['registrar_signature']) : '';
+$date_received = isset($_POST['date_received']) ? $conn->real_escape_string($_POST['date_received']) : '';
+
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 // Insert data into personal_information table
 $sql1 = "INSERT INTO personal_information (user_id, first_name, last_name, middle_name, nationality, sex, civil_status, employment_status, month_of_birth, day_of_birth, year_of_birth, age)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -111,7 +122,7 @@ $stmt3->bind_param('sss', $user_id, $profile_image, $imageUpload);
 $stmt3->execute();
 
 // Insert data into educational table
-$sql4 = "INSERT INTO educational (user_id, educational_attainment, classification, qualification, scholarship)
+$sql4 = "INSERT INTO education (user_id, educational_attainment, classification, qualification, scholarship)
 VALUES (?, ?, ?, ?, ?)";
 $stmt4 = $conn->prepare($sql4);
 $stmt4->bind_param('sssss', $user_id, $educational_attainment, $classification, $qualification, $scholarship);
@@ -125,15 +136,15 @@ $stmt5->bind_param('sss', $user_id, $disability, $cause_of_disability);
 $stmt5->execute();
 
 // Insert data into ncae_information table
-$sql6 = "INSERT INTO ncae_information (user_id, taken_ncae, where, when)
+$sql6 = "INSERT INTO ncae_information (user_id, taken_ncae, where_ncae, when_ncae)
 VALUES (?, ?, ?, ?)";
 $stmt6 = $conn->prepare($sql6);
 $stmt6->bind_param('ssss', $user_id, $taken_ncae, $where, $when);
 $stmt6->execute();
 
-// Insert data into registration_details table
-$sql7 = "INSERT INTO registration_details (user_id, applicant_signature, date_accomplished, registrar_signature, date_received, privacy_disclaimer)
-VALUES (?, ?, ?, ?, ?, ?)";
+// Insert data into registration_details table and set registration_complete to 1
+$sql7 = "INSERT INTO registration_details (user_id, applicant_signature, date_accomplished, registrar_signature, date_received, privacy_disclaimer, registration_complete)
+VALUES (?, ?, ?, ?, ?, ?, 1)";
 $stmt7 = $conn->prepare($sql7);
 $stmt7->bind_param('ssssss', $user_id, $applicant_signature, $date_accomplished, $registrar_signature, $date_received, $privacy_disclaimer);
 $stmt7->execute();
@@ -152,17 +163,11 @@ $stmt9 = $conn->prepare($sql9);
 $stmt9->bind_param('ssssss', $user_id, $birthplace_city_municipality, $birthplace_province, $birthplace_region, $uli_number, $entry_date);
 $stmt9->execute();
 
-// Update the user_profile table to set registration_complete to 1
-$sql10 = "UPDATE user_profile SET registration_complete = 1 WHERE user_id = ?";
-$stmt10 = $conn->prepare($sql10);
-$stmt10->bind_param('i', $user_id);
-$stmt10->execute();
-
 // Check if all queries were successful
 if ($stmt1->affected_rows > 0 && $stmt2->affected_rows > 0 && $stmt3->affected_rows > 0 &&
     $stmt4->affected_rows > 0 && $stmt5->affected_rows > 0 && $stmt6->affected_rows > 0 &&
-    $stmt7->affected_rows > 0 && $stmt8->affected_rows > 0 && $stmt9->affected_rows > 0 && $stmt10->affected_rows > 0) {
-    
+    $stmt7->affected_rows > 0 && $stmt8->affected_rows > 0 && $stmt9->affected_rows > 0) {
+
     echo "Registration complete and data inserted successfully.";
     header('Location: login.php');
     exit(); // Ensure the script stops after redirect
@@ -181,5 +186,4 @@ $stmt6->close();
 $stmt7->close();
 $stmt8->close();
 $stmt9->close();
-$stmt10->close();
 $conn->close();
