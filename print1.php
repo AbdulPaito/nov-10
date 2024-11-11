@@ -256,9 +256,9 @@ left: -45px;
 }
 
 .picture-box img {
-    width: 140px;  /* Fixed width */
-    height: 100px; /* Fixed height */
-
+    width: 140px;         /* Fixed width */
+    height: 100px;        /* Fixed height */
+    
 }
 
 
