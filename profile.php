@@ -12,18 +12,20 @@ if (!$connection) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-// Step 2: Handle search query with batch and date parsing
+// Step 2: Handle search query with batch, date, and year parsing
 $search = isset($_GET['search']) ? mysqli_real_escape_string($connection, $_GET['search']) : '';
 $course = '';
 $batch = '';
+$year = '';
 $startDate = '';
 $endDate = '';
 
-// Parse search query to extract course and batch
-preg_match('/(.*?)\s*(batch\s+\d+)/i', $search, $matches);  // Extract course and batch
+// Parse search query to extract course, batch, and optional year
+preg_match('/(.*?)\s*(batch\s+\d+)\s*(\d{4})?/i', $search, $matches);
 if ($matches) {
-    $course = trim($matches[1]);  // Course name
-    $batch = trim($matches[2]);   // Batch number
+    $course = trim($matches[1]);               // Course name
+    $batch = trim($matches[2]);                 // Batch number
+    $year = isset($matches[3]) ? $matches[3] : '';  // Year (optional)
 } else {
     $course = $search;  // If no batch is specified, treat the whole search term as course name
 }
@@ -48,7 +50,8 @@ $query = "
             e.qualification,  
             img.profile_image AS image_path,  
             bi.entry_date,
-            CEIL(ROW_NUMBER() OVER (PARTITION BY e.qualification ORDER BY bi.entry_date) / 25) AS batch -- Example batch calculation
+            CEIL(ROW_NUMBER() OVER (PARTITION BY e.qualification, YEAR(bi.entry_date) ORDER BY bi.entry_date) / 25) AS batch,
+            YEAR(bi.entry_date) AS entry_year
         FROM personal_information pi
         LEFT JOIN users u ON u.user_id = pi.user_id
         LEFT JOIN profile_images img ON pi.user_id = img.user_id
@@ -69,12 +72,15 @@ if ($startDate && $endDate) {
 
 $query .= ") AS numbered_users";
 
-// Step 4: If a batch number is specified, filter by batch; otherwise, show all batches
+// Step 4: Filter by batch number and year if specified
 if ($batchNumber > 0) {
     $query .= " WHERE batch = $batchNumber";
 }
+if (!empty($year)) {
+    $query .= (strpos($query, 'WHERE') !== false ? " AND " : " WHERE ") . "entry_year = $year";
+}
 
-$query .= " ORDER BY entry_date";  // Change 'bi.entry_date' to 'entry_date' to refer to the column correctly
+$query .= " ORDER BY entry_date";  // Order by entry date for display
 
 // Execute the query
 $result = mysqli_query($connection, $query);
