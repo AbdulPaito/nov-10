@@ -6,12 +6,15 @@ $error_message = ''; // Variable to store error messages
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
-    $password = $_POST['password']; // Raw password
+    $password = $_POST['password'];
     $email = $_POST['email'];
+    $pin = $_POST['pin']; // Retrieve the PIN
 
     // Basic validation
-    if (empty($username) || empty($password) || empty($email)) {
+    if (empty($username) || empty($password) || empty($email) || empty($pin)) {
         $error_message = "All fields are required.";
+    } elseif (!ctype_digit($pin) || strlen($pin) !== 6) {
+        $error_message = "PIN must be exactly 6 digits.";
     } else {
         // Check if username is already taken
         $check_user_sql = "SELECT * FROM users WHERE username = ?";
@@ -40,12 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = "Email address already in use.";
             } else {
                 // Insert new user into users table with raw password
-                $insert_sql = "INSERT INTO users (username, password, email, status) VALUES (?, ?, ?, 'Pending')";
+                $insert_sql = "INSERT INTO users (username, password, email, pin, status) VALUES (?, ?, ?, ?, 'Pending')";
                 $stmt = $conn->prepare($insert_sql);
                 if ($stmt === false) {
                     die("Prepare failed: " . $conn->error); // Output detailed error message
                 }
-                $stmt->bind_param("sss", $username, $password, $email);
+                $stmt->bind_param("ssss", $username, $password, $email, $pin);
 
                 if ($stmt->execute()) {
                     // Automatically log the user in after successful registration
@@ -70,43 +73,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up</title>
   <link rel="stylesheet" href="log.css">
-  <link rel="stylesheet" href="log.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     .error-container {
       color: red;
       font-weight: bold;
-      position: relative;
-     
     }
-    
-   
-      
-    .inputBox2 input{
+    .inputBox2 input, .inputBox input {
       padding: 10px;
       width: 60%;
       text-align: center;
       border-radius: 20px;
-      
+      position: relative;
+      top: -10px;
     }
     .inputBox2 {
       text-align: center;
       border-radius: 20px;
       margin-top: -10px;
     }
-
     .eye-icon {
       position: absolute;
       right: 10px;
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
-      color: #aaa; /* Icon color */
-      font-size: 20px; /* Adjust size */
+      color: #aaa;
+      font-size: 20px;
     }
-
     .eye-icon.active {
-      color: #000; /* Icon color when active */
+      color: #000;
     }
   </style>
 </head>
@@ -131,6 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           <div class="inputBox">
             <input type="email" name="email" placeholder="Email" required>
           </div>
+
+          <div class="inputBox">
+            <input type="text" name="pin" placeholder="6-Digit PIN" pattern="\d{6}" title="PIN must be exactly 6 digits" required>
+          </div>
+
           <div class="inputBox2">
             <input type="submit" value="Sign Up">
           </div>
@@ -151,6 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         eyeIcon.classList.remove('active');
       }
     }
-</script>
+  </script>
 </body>
 </html>
