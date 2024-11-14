@@ -95,11 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     .eye-icon {
       position: absolute;
       right: 10px;
-      top: 50%;
+      top: 30%;
       transform: translateY(-50%);
       cursor: pointer;
       color: #aaa;
       font-size: 20px;
+      
     }
     .eye-icon.active {
       color: #000;
