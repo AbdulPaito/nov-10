@@ -220,7 +220,7 @@ if (!$result) {
 <body>
 
 <section id="profile-section">
-    <h1>Profile</h1>
+    <h1>Profile Information</h1>
 
     <!-- Search Form -->
     <form method="GET" action="dashboard.php">
