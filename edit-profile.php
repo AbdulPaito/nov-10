@@ -265,7 +265,7 @@ mysqli_close($connection);
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 1350px;
+    height: auto;
     margin: 0;
 }
 h2 {
@@ -273,7 +273,7 @@ h2 {
             background: #1182fa;
             color: #fff;
             padding: 10px ;
-            margin: 0;
+            margin-top: -8px;
 }
 
 
@@ -526,6 +526,35 @@ input[type="submit"]:active {
             <input type="text" name="cause_of_disability" value="<?php echo htmlspecialchars($user['cause_of_disability']); ?>">
         </div>
     </div>
+
+    <div class="form-row">
+    <div class="form-group">
+            <label for="scholarship">Scholarship TWSP, PESFA, STEP, others?</label>
+            <input type="text" name="scholarship" value="<?php echo htmlspecialchars($user['scholarship']); ?>">
+        </div>
+    <div class="form-group">
+            <label for="privacy_disclaimer">Privacy Disclaimer</label>
+            <input type="text" name="privacy_disclaimer" value="<?php echo htmlspecialchars($user['privacy_disclaimer']); ?>">
+        </div>
+    </div>
+
+    <div class="form-row">
+    <div class="form-group">
+            <label for="applicant_signature">Applicant Signature Over Printed Name</label>
+            <input type="text" name="applicant_signature" value="<?php echo htmlspecialchars($user['applicant_signature']); ?>">
+        </div>
+    <div class="form-group">
+            <label for="date_accomplished">Date ACCOMPLISHED</label>
+            <input type="text" name="date_accomplished" value="<?php echo htmlspecialchars($user['date_accomplished']); ?>">
+        </div>
+    </div>
+
+    <label for="imageUpload">Picture:</label>
+    <div class="image-container">
+        <img src="<?php echo htmlspecialchars($user['imageUpload']); ?>" alt="Picture">
+    </div>
+    <input type="file" name="imageUpload" accept="image/*">
+    <br>
 
     <input type="submit" value="Update Information">
 </div>
