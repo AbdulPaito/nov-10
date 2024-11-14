@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         
                         // If registration is complete
                         if ($user_details['registration_complete'] == 1) {
-                            header("Location: info_edit.php"); // Redirect to info_edit.php if registration is complete
+                          header("Location: info_edit.php?user_id=" . $_SESSION['user_id']); // Pass user_id in URL
                         } else {
                             header("Location: page1.php"); // Redirect to page1.php if registration is incomplete
                         }

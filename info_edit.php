@@ -13,33 +13,34 @@ if (!$connection) {
 }
 
 // Step 2: Get the user_id from the URL or session (ensure it's safe)
-$user_id = intval($_GET['id']); // Use intval to ensure it's an integer
+$user_id = intval($_GET['user_id']); // Use intval to ensure it's an integer
 
-// Step 3: Prepare the query to fetch user data
+// Step 3: Prepare the query to fetch user data with JOINs
 $query = "
-    SELECT 
-        u.*, 
-        ppi.profile_image, imageUpload,
-        pi.last_name, first_name, middle_name, nationality, sex, civil_status, employment_status, month_of_birth, day_of_birth, year_of_birth, age,
-        bi.*, 
-        ci.*, 
-        di.*, 
-        ei.*, 
-        gi.*, 
-        ni.*, 
-        ri.*
-    FROM users u
-    LEFT JOIN personal_information pi ON u.user_id = pi.user_id
-    LEFT JOIN birth_information bi ON u.user_id = bi.user_id
-    LEFT JOIN contact_information ci ON u.user_id = ci.user_id
-    LEFT JOIN disability_information di ON u.user_id = di.user_id
-    LEFT JOIN education ei ON u.user_id = ei.user_id
-    LEFT JOIN guardian_information gi ON u.user_id = gi.user_id
-    LEFT JOIN ncae_information ni ON u.user_id = ni.user_id
-    LEFT JOIN registration_details ri ON u.user_id = ri.user_id
-    LEFT JOIN profile_images ppi ON u.user_id = ppi.user_id
-    WHERE u.user_id = ?;
+     SELECT 
+    u.*, 
+    ppi.*,
+    pi.*,
+    bi.*, 
+    ci.*, 
+    di.*, 
+    ei.*, 
+    gi.*, 
+    ni.*, 
+    ri.*
+FROM users u
+LEFT JOIN personal_information pi ON u.user_id = pi.user_id
+LEFT JOIN birth_information bi ON u.user_id = bi.user_id
+LEFT JOIN contact_information ci ON u.user_id = ci.user_id
+LEFT JOIN disability_information di ON u.user_id = di.user_id
+LEFT JOIN education ei ON u.user_id = ei.user_id
+LEFT JOIN guardian_information gi ON u.user_id = gi.user_id
+LEFT JOIN ncae_information ni ON u.user_id = ni.user_id
+LEFT JOIN registration_details ri ON u.user_id = ri.user_id
+LEFT JOIN profile_images ppi ON u.user_id = ppi.user_id
+WHERE u.user_id = ?;
 ";
+
 
 // Step 4: Prepare and bind parameters to the query (for secure execution)
 if ($stmt = mysqli_prepare($connection, $query)) {
@@ -54,7 +55,7 @@ if ($stmt = mysqli_prepare($connection, $query)) {
         // Step 7: Fetch the result as an associative array
         if ($user = mysqli_fetch_assoc($result)) {
             // Successfully fetched user data
-            // Now you can use $user to display the user's information
+            // Now you can use $user to display the user's information in the form fields
         } else {
             echo "No user found.";
         }
@@ -69,13 +70,21 @@ if ($stmt = mysqli_prepare($connection, $query)) {
 }
 
 // Step 8: Handle the update form submission (if any)
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Get updated data from the form, sanitize and validate
-    $first_name = mysqli_real_escape_string($connection, $_POST['first_name']);
-    $last_name = mysqli_real_escape_string($connection, $_POST['last_name']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
+    // Get form data
     $uli_number = mysqli_real_escape_string($connection, $_POST['uli_number']);
     $entry_date = mysqli_real_escape_string($connection, $_POST['entry_date']);
+    $last_name = mysqli_real_escape_string($connection, $_POST['last_name']);
+    $first_name = mysqli_real_escape_string($connection, $_POST['first_name']);
     $middle_name = mysqli_real_escape_string($connection, $_POST['middle_name']);
+    $address_number_street = mysqli_real_escape_string($connection, $_POST['address_number_street']);
+    $address_barangay = mysqli_real_escape_string($connection, $_POST['address_barangay']);
+    $address_district = mysqli_real_escape_string($connection, $_POST['address_district']);
+    $address_city_municipality = mysqli_real_escape_string($connection, $_POST['address_city_municipality']);
+    $address_province = mysqli_real_escape_string($connection, $_POST['address_province']);
+    $address_region = mysqli_real_escape_string($connection, $_POST['address_region']);
+    $email_facebook = mysqli_real_escape_string($connection, $_POST['email_facebook']);
+    $contact_no = mysqli_real_escape_string($connection, $_POST['contact_no']);
     $nationality = mysqli_real_escape_string($connection, $_POST['nationality']);
     $sex = mysqli_real_escape_string($connection, $_POST['sex']);
     $civil_status = mysqli_real_escape_string($connection, $_POST['civil_status']);
@@ -93,156 +102,126 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $classification = mysqli_real_escape_string($connection, $_POST['classification']);
     $disability = mysqli_real_escape_string($connection, $_POST['disability']);
     $cause_of_disability = mysqli_real_escape_string($connection, $_POST['cause_of_disability']);
-    $taken_ncae = mysqli_real_escape_string($connection, $_POST['taken_ncae']);
-    $where_ncae = mysqli_real_escape_string($connection, $_POST['where_ncae']);
-    $when_ncae = mysqli_real_escape_string($connection, $_POST['when_ncae']);
-    $qualification = mysqli_real_escape_string($connection, $_POST['qualification']);
     $scholarship = mysqli_real_escape_string($connection, $_POST['scholarship']);
     $privacy_disclaimer = mysqli_real_escape_string($connection, $_POST['privacy_disclaimer']);
     $applicant_signature = mysqli_real_escape_string($connection, $_POST['applicant_signature']);
     $date_accomplished = mysqli_real_escape_string($connection, $_POST['date_accomplished']);
-    $registrar_signature = mysqli_real_escape_string($connection, $_POST['registrar_signature']);
-    // Handle profile image upload
-    $imageUpload = $_FILES['profile_image']['name'];
-    if ($imageUpload) {
-        $target_dir = "uploads/";
-        $target_file = $target_dir . basename($_FILES["profile_image"]["name"]);
-        move_uploaded_file($_FILES["profile_image"]["tmp_name"], $target_file);
+
+    // Check if the user uploaded new profile image or ID picture
+    if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == 0) {
+        $profile_image = "uploads/" . $_FILES['profile_image']['name'];  // Assuming 'uploads' is the folder where you store images
+        move_uploaded_file($_FILES['profile_image']['tmp_name'], $profile_image);
+    } else {
+        $profile_image = $user['profile_image'];  // Use existing image if not updated
     }
 
-    // Example of SQL Query to update multiple tables
-    $update_query = "
-    UPDATE personal_information pi
-    SET 
-        pi.first_name = ?, 
-        pi.last_name = ?, 
-        pi.middle_name = ?, 
-        pi.nationality = ?, 
-        pi.sex = ?, 
-        pi.civil_status = ?, 
-        pi.employment_status = ?, 
-        pi.month_of_birth = ?, 
-        pi.day_of_birth = ?, 
-        pi.year_of_birth = ?, 
-        pi.age = ?, 
-        pi.birthplace_city_municipality = ?, 
-        pi.birthplace_province = ?, 
-        pi.birthplace_region = ?
-    WHERE pi.user_id = ?;
+    if (isset($_FILES['imageUpload']) && $_FILES['imageUpload']['error'] == 0) {
+        $imageUpload = "uploads/" . $_FILES['imageUpload']['name'];  // Assuming 'uploads' is the folder where you store images
+        move_uploaded_file($_FILES['imageUpload']['tmp_name'], $imageUpload);
+    } else {
+        $imageUpload = $user['imageUpload'];  // Use existing image if not updated
+    }
 
-    UPDATE contact_information ci
-    SET 
-        ci.address_number_street = ?, 
-        ci.address_barangay = ?, 
-        ci.address_district = ?, 
-        ci.address_city_municipality = ?, 
-        ci.address_province = ?, 
-        ci.address_region = ?, 
-        ci.contact_no = ?, 
-        ci.email_facebook = ?
-    WHERE ci.user_id = ?;
+    $all_updates_successful = true; // Flag to check if all updates were successful
 
-    UPDATE profile_images ppi
-    SET 
-        ppi.imageUpload = ?, 
-        ppi.profile_image = ?
-    WHERE ppi.user_id = ?;
-
-    UPDATE education ei
-    SET 
-        ei.educational_attainment = ?, 
-        ei.classification = ?, 
-        ei.qualification = ?, 
-        ei.scholarship = ?
-    WHERE ei.user_id = ?;
-
-    UPDATE disability_information di
-    SET 
-        di.disability = ?, 
-        di.cause_of_disability = ?
-    WHERE di.user_id = ?;
-
-    UPDATE ncae_information ni
-    SET 
-        ni.taken_ncae = ?, 
-        ni.where_ncae = ?, 
-        ni.when_ncae = ?
-    WHERE ni.user_id = ?;
-
-    UPDATE registration_details ri
-    SET 
-        ri.privacy_disclaimer = ?, 
-        ri.applicant_signature = ?, 
-        ri.registrar_signature = ?, 
-        ri.date_accomplished = ?, 
-        ri.date_received = ?, 
-        ri.registration_complete = ?
-    WHERE ri.user_id = ?;
-
-    UPDATE guardian_information gi
-    SET 
-        gi.parent_guardian_name = ?, 
-        gi.parent_guardian_address = ?
-    WHERE gi.user_id = ?;
-
-    UPDATE birth_information bi
-    SET 
-        bi.uli_number = ?, 
-        bi.entry_date = ?, 
-        bi.birthplace_city_municipality = ?, 
-        bi.birthplace_province = ?, 
-        bi.birthplace_region = ?
-    WHERE bi.user_id = ?;
-    ";
-
-    // Prepare and bind parameters for each table update
-    if ($stmt = mysqli_prepare($connection, $update_query)) {
-        // Bind parameters here (ensure you have all necessary variables from your form)
-        mysqli_stmt_bind_param($stmt, 'ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss',
-            // Personal Information
-            $first_name, $last_name, $middle_name, $nationality, $sex, $civil_status, $employment_status, $month_of_birth, $day_of_birth, $year_of_birth, $age,
-            $birthplace_city_municipality, $birthplace_province, $birthplace_region, $user_id,
-
-            // Contact Information
-            $address_number_street, $address_barangay, $address_district, $address_city_municipality, $address_province, $address_region, $contact_no, $email_facebook, $user_id,
-
-            // Profile Image
-            $imageUpload, $profile_image, $user_id,
-
-            // Education
-            $educational_attainment, $classification, $qualification, $scholarship, $user_id,
-
-            // Disability Information
-            $disability, $cause_of_disability, $user_id,
-
-            // NCAE Information
-            $taken_ncae, $where_ncae, $when_ncae, $user_id,
-
-            // Registration Details
-            $privacy_disclaimer, $applicant_signature, $registrar_signature, $date_accomplished, $date_received, $registration_complete, $user_id,
-
-            // Guardian Information
-            $parent_guardian_name, $parent_guardian_address, $user_id,
-
-            // Birth Information
-            $uli_number, $entry_date, $birthplace_city_municipality, $birthplace_province, $birthplace_region, $user_id
-        );
-
-        // Step 6: Execute the update query
-        if (mysqli_stmt_execute($stmt)) {
-            echo "Data updated successfully.";
-        } else {
-            echo "Error updating data: " . mysqli_error($connection);
-        }
-
-        // Close the statement
+    $query1 = "UPDATE personal_information SET first_name = ?, last_name = ?, middle_name = ?, nationality = ?, sex = ?, civil_status = ?, employment_status = ?, month_of_birth = ?, day_of_birth = ?, year_of_birth = ?, age = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query1)) {
+        mysqli_stmt_bind_param($stmt, 'sssssssssssi', $first_name, $last_name, $middle_name, $nationality, $sex, $civil_status, $employment_status, $month_of_birth, $day_of_birth, $year_of_birth, $age, $user_id);
+        mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false; // If any update fails, set to false
+    }
+
+    $query2 = "UPDATE contact_information SET address_number_street = ?, address_barangay = ?, address_district = ?, address_city_municipality = ?, address_province = ?, address_region = ?, email_facebook = ?, contact_no = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query2)) {
+        mysqli_stmt_bind_param($stmt, 'ssssssssi', $address_number_street, $address_barangay, $address_district, $address_city_municipality, $address_province, $address_region, $email_facebook, $contact_no, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    $query3 = "UPDATE profile_images SET profile_image = ?, imageUpload = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query3)) {
+        mysqli_stmt_bind_param($stmt, 'ssi', $profile_image, $imageUpload, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    $query4 = "UPDATE education SET educational_attainment = ?, classification = ?, scholarship = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query4)) {
+        mysqli_stmt_bind_param($stmt, 'sssi', $educational_attainment, $classification, $scholarship, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    $query5 = "UPDATE disability_information SET disability = ?, cause_of_disability = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query5)) {
+        mysqli_stmt_bind_param($stmt, 'ssi', $disability, $cause_of_disability, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    $query6 = "UPDATE ncae_information SET taken_ncae = ?, where_ncae = ?, when_ncae = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query6)) {
+        mysqli_stmt_bind_param($stmt, 'sssi', $taken_ncae, $where, $when, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    $query7 = "UPDATE registration_details SET applicant_signature = ?, date_accomplished = ?, registrar_signature = ?, date_received = ?, privacy_disclaimer = ?, registration_complete = 1 WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query7)) {
+        mysqli_stmt_bind_param($stmt, 'sssssi', $applicant_signature, $date_accomplished, $registrar_signature, $date_received, $privacy_disclaimer, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    $query8 = "UPDATE guardian_information SET parent_guardian_name = ?, parent_guardian_address = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query8)) {
+        mysqli_stmt_bind_param($stmt, 'ssi', $parent_guardian_name, $parent_guardian_address, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    $query9 = "UPDATE birth_information SET birthplace_city_municipality = ?, birthplace_province = ?, birthplace_region = ?, uli_number = ?, entry_date = ? WHERE user_id = ?";
+    if ($stmt = mysqli_prepare($connection, $query9)) {
+        mysqli_stmt_bind_param($stmt, 'sssssi', $birthplace_city_municipality, $birthplace_province, $birthplace_region, $uli_number, $entry_date, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        $all_updates_successful = false;
+    }
+
+    // Final check for all updates
+    if (!$all_updates_successful) {
+        die("Update failed: " . mysqli_error($connection));
+    } else {
+        echo "Record updated successfully!";
+        header('Location: login.php');  // Redirect to profile page after success
+        exit;
     }
 }
+?> 
 
-// Close the connection
-mysqli_close($connection);
-?>
+
+
+
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -344,10 +323,10 @@ input[type="submit"]:active {
 
 </style>
 </head>
-<body>
+<body> 
 <div class="form-container">
-    <h2>Update Profile Information</h2>
-
+    <h2>Profile Edit Information</h2>
+    <form method="POST" enctype="multipart/form-data">
     <label for="profile_image">Profile Image:</label>
     <div class="image-container">
         <img src="<?php echo htmlspecialchars($user['profile_image']); ?>" alt="Profile Image">
@@ -549,7 +528,8 @@ input[type="submit"]:active {
     <input type="file" name="imageUpload" accept="image/*">
     <br>
 
-    <input type="submit" value="Update Information">
+   
+    <input type="submit" name="update" value="Update">
 </div>
 </body>
 </html>
